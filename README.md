@@ -1,5 +1,5 @@
 <p align="center">An AirBnB clone.</p>
-# AirBnB clone - The console
+<h1 align="center"> AirBnB clone - The console </h1>
 
 
 The AirBnB console this about create a minishell, this console works in interactive and non-interactive mode; this project is just a basic copy of AirBnB, 
