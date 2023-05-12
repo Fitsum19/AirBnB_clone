@@ -92,7 +92,8 @@ class HBNBCommand(cmd.Cmd):
                     print("** class doesn't exist **")
 
     def do_show(self, arg):
-        """ Method to print instance """
+        """ Method to print instance 
+        Usage: show <class> <id> or <class>.show(<id>)"""
         argl = arg.split()
         if len(argl) == 0:
             print('** class name missing **')
@@ -145,8 +146,12 @@ class HBNBCommand(cmd.Cmd):
             print(obj1)
 
     def do_update(self, arg):
-        """ Method to update JSON file"""
+        """ Method to update JSON file update 
+        <class> <id> <attribute_name> <attribute_value> or
+       <class>.update(<id>, <attribute_name>, <attribute_value>) or
+       <class>.update(<id>, <dictionary>)"""
         arg = arg.split()
+        objdic = storage.all()
         if len(arg) == 0:
             print('** class name missing **')
             return
@@ -156,25 +161,37 @@ class HBNBCommand(cmd.Cmd):
         elif len(arg) == 1:
             print('** instance id missing **')
             return
-        else:
-            key = arg[0] + '.' + arg[1]
-            if key in storage.all():
-                if len(arg) > 2:
-                    if len(arg) == 3:
-                        print('** value missing **')
-                    else:
-                        setattr(
-                            storage.all()[key],
-                            arg[2],
-                            arg[3][1:-1])
-                        storage.all()[key].save()
-                else:
-                    print('** attribute name missing **')
+        elif len(arg) == 2:
+            print("** attribute name missing **")
+            return
+        elif "{}.{}".format(arg[0], arg[1]) not in objdic.keys():
+            print("** no instance found **")
+            return
+        elif len(arg) == 3:
+            try:
+                type(eval(argl[2])) != dict
+            except NameError:
+                print("** value missing **")
+                return False
+
+        if len(arg) == 4:
+            obj = objdic["{}.{}".format(arg[0], arg[1])]
+            if arg[2] in obj.__class__.__dict__.keys():
+                valtype = type(obj.__class__.__dict__[arg[2]])
+                obj.__dict__[arg[2]] = valtype(arg[3])
             else:
-                print('** no instance found **')
+                obj.__dict__[arg[2]] = arg[3]
+        elif type(eval(arg[2])) == dict:
+            obj = objdict["{}.{}".format(arg[0], arg[1])]
+            for k, v in eval(arg[2]).items():
+                if (k in obj.__class__.__dict__.keys() and
+                        type(obj.__class__.__dict__[k]) in {str, int, float}):
+                    valtype = type(obj.__class__.__dict__[k])
+                    obj.__dict__[k] = valtype(v)
+                else:
+                    obj.__dict__[k] = v
+        storage.save()
 
-
-            return retl
 
     def do_count(self, arg):
         """Usage: count <class> or <class>.count()
