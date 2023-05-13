@@ -16,6 +16,7 @@ from models.city import City
 from models.amenity import Amenity
 from models.review import Review
 
+
 def parse(arg):
     curly_braces = re.search(r"\{(.*?)\}", arg)
     brackets = re.search(r"\[(.*?)\]", arg)
@@ -33,6 +34,7 @@ def parse(arg):
         retl.append(curly_braces.group())
         return retl
 
+
 class HBNBCommand(cmd.Cmd):
     """ General Class for HBNBCommand """
     prompt = '(hbnb) '
@@ -42,12 +44,12 @@ class HBNBCommand(cmd.Cmd):
 
     def do_quit(self, arg):
         """ Quit command to exit the program."""
-        exit()
+        return True
 
     def do_EOF(self, arg):
-        """  """
-        print('')
-        exit()
+        """ EOF signal to exit the program. """
+        print("")
+        return True
 
     def emptyline(self):
         """ Method to pass when emptyline entered """
@@ -74,26 +76,24 @@ class HBNBCommand(cmd.Cmd):
         print("*** Unknown syntax: {}".format(arg))
         return False
 
-
     def do_create(self, arg):
-        """ Create a new instance """
-        if len(arg) == 0:
+        """Usage: create <class>
+        Create a new class instance and print its id.
+        """
+        argl = parse(arg)
+        if len(argl) == 0:
             print('** class name missing **')
             return
-        new = None
-        if arg:
-            arg_list = arg.split()
-            if len(arg_list) == 1:
-                if arg in self.classes.keys():
-                    new = self.classes[arg]()
-                    new.save()
-                    print(new.id)
-                else:
-                    print("** class doesn't exist **")
+        elif argl[0] not in self.classes:
+            print("** class doesn't exist **")
+        else:
+            print(eval(argl[0])().id)
+            storage.save()
 
     def do_show(self, arg):
-        """ Method to print instance 
-        Usage: show <class> <id> or <class>.show(<id>)"""
+        """Usage: show <class> <id> or <class>.show(<id>)
+        Display the string representation of a class instance of a given id.
+        """
         argl = parse(arg)
         if len(argl) == 0:
             print('** class name missing **')
@@ -101,7 +101,7 @@ class HBNBCommand(cmd.Cmd):
         elif argl[0] not in self.classes:
             print("** class doesn't exist **")
             return
-        elif len(argl)  == 1:
+        elif len(argl) == 1:
             print('** instance id missing **')
         elif len(argl) > 1:
             key = argl[0] + '.' + argl[1]
@@ -112,11 +112,11 @@ class HBNBCommand(cmd.Cmd):
                 print('** no instance found **')
 
     def do_destroy(self, arg):
-        """ Method to delete instance with class and id
-        Usage: all or all <class> or <class>.all()"""
+        """Usage: destroy <class> <id> or <class>.destroy(<id>)
+        Delete a class instance of a given id."""
         arg_list = parse(arg)
         objdict = storage.all()
-        if len(arg) == 0:
+        if len(arg_list) == 0:
             print("** class name missing **")
             return
         elif arg_list[0] not in self.classes:
@@ -131,26 +131,29 @@ class HBNBCommand(cmd.Cmd):
             del objdict["{}.{}".format(arg_list[0], arg_list[1])]
             storage.save()
 
-           
     def do_all(self, arg):
-        """ Method to print all instances """
+        """Usage: all or all <class> or <class>.all()
+        Display string representations of all instances of a given class.
+        If no class is specified, displays all instantiated objects."""
         arg1 = arg.split()
         if len(arg1) > 0 and arg1[0] not in self.classes:
             print("** class doesn't exist **")
+            return
         else:
             obj1 = []
             for obj in storage.all().values():
                 if len(arg1) == 0:
-                    objl.append(obj.__str__())
-                elif len(arg1) > 0 and  arg1[0] == obj.__class__.__name__:
+                    obj1.append(obj.__str__())
+                elif len(arg1) > 0 and arg1[0] == obj.__class__.__name__:
                     obj1.append(obj.__str__())
             print(obj1)
 
     def do_update(self, arg):
-        """ Method to update JSON file update 
-        <class> <id> <attribute_name> <attribute_value> or
+        """Usage: update <class> <id> <attribute_name> <attribute_value> or
        <class>.update(<id>, <attribute_name>, <attribute_value>) or
-       <class>.update(<id>, <dictionary>)"""
+       <class>.update(<id>, <dictionary>)
+        Update a class instance of a given id by adding or updating
+        a given attribute key/value pair or dictionary."""
         argl = parse(arg)
         objdic = storage.all()
         if len(argl) == 0:
@@ -158,16 +161,16 @@ class HBNBCommand(cmd.Cmd):
             return
         elif argl[0] not in self.classes:
             print("** class doesn't exist **")
-            return
+            return False
         elif len(argl) == 1:
             print('** instance id missing **')
-            return
-        elif len(argl) == 2:
-            print("** attribute name missing **")
-            return
+            return False
         elif "{}.{}".format(argl[0], argl[1]) not in objdic.keys():
             print("** no instance found **")
-            return
+            return False
+        if len(argl) == 2:
+            print("** attribute name missing **")
+            return False
         elif len(argl) == 3:
             try:
                 type(eval(argl[2])) != dict
@@ -177,7 +180,7 @@ class HBNBCommand(cmd.Cmd):
 
         if len(argl) == 4:
             obj = objdic["{}.{}".format(argl[0], argl[1])]
-            if arg[2] in obj.__class__.__dict__.keys():
+            if argl[2] in obj.__class__.__dict__.keys():
                 valtype = type(obj.__class__.__dict__[argl[2]])
                 obj.__dict__[argl[2]] = valtype(argl[3])
             else:
@@ -193,24 +196,15 @@ class HBNBCommand(cmd.Cmd):
                     obj.__dict__[k] = v
         storage.save()
 
-
     def do_count(self, arg):
         """Usage: count <class> or <class>.count()
         Retrieve the number of instances of a given class."""
-        argl =  arg.split()
+        argl = arg.split()
         count = 0
-        if len(argl) == 0:
-            print ("** class name missing **")
-            return
-        if len(argl) > 0 and argl[0] not in self.classes:
-            print("** class doesn't exist **")
-        else:
-            for obj in storage.all().values():
-                if len(argl) > 0 and argl[0] == obj.__class__.__name__:
-                   count += 1
-                elif len(argl) == 0:
-                    print("** class doesn't exist **")
-            print(count)
+        for obj in storage.all().values():
+            if len(argl) > 0 and argl[0] == obj.__class__.__name__:
+                count += 1
+        print(count)
 
 
 if __name__ == '__main__':
