@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 """Defines unittests for models/review.py.
-Unittest classes:
-    TestReview_instantiation
-    TestReview_save
-    TestReview_to_dict
+Unit test classes:
+    Test Review_instantiation
+    Test Review_save
+    Test Review_to_dict
 """
 import os
 import models
