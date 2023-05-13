@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 
-"""import the BaseModel package class."""
+"""import the Base Model package class."""
 import models
 from uuid import uuid4
 from datetime import datetime
@@ -42,7 +42,7 @@ class BaseModel:
         return "[{}] ({}) {}".format(clname, self.id, self.__dict__)
 
     def save(self):
-        """ Update updated_at with the current datetime. """
+        """ Update updated_at with the current date time. """
         self.updated_at = datetime.now()
         models.storage.save()
 
